@@ -115,7 +115,7 @@ function CanvasState(canvas) {
   }, true);
 
   $("#clearbtn").click(function() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    myState.ctx.clearRect(0, 0, canvas.width, canvas.height);
   });
 }
 
@@ -139,11 +139,11 @@ CanvasState.prototype.draw = function() {
 
     //draw shapes
     var l = shapes.length;
-    for (var i = 0; i < 1; i++) {
+    for (var i = 0; i < l; i++) {
       var shape = shapes[i];
       if(shape == null) continue;
-      if(shape.x > this.width || shape.y > this.height ||
-        shape.x + shape.w < 0 || shape.y + shape.h < 0) continue;
+      if(shape.x > this.width || shape.y > this.height || 
+	   shape.x + shape.w < 0 || shape.y + shape.h < 0) continue;
       shapes[i].draw(ctx);
     }
 
