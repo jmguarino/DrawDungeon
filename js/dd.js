@@ -1,8 +1,7 @@
 //TODO:
-// 1) fix movement not working
-// 2) add logic to mouse handlers to create new shape after clicking, dragging, releasing
-// 3) add logic to mouse handlers to handle right click select + move shape (hold)
-// 4) add strokeRect preview for click + drag, then fillRect when mouseup
+// 1) add logic to mouse handlers to create new shape after clicking, dragging, releasing
+// 2) add logic to mouse handlers to handle right click select + move shape (hold)
+// 3) add strokeRect preview for click + drag, then fillRect when mouseup
 var isDown = false;
 var x1, y1; //mousedown position
 var x2, y2; //mouseup position
@@ -174,7 +173,7 @@ CanvasState.prototype.getMouse = function(e) {
     } while((element = element.offsetParent));
   }
 
-  offsetX += this.styplePaddingLeft + this.styleBorderLeft + this.htmlLeft;
+  offsetX += this.stylePaddingLeft + this.styleBorderLeft + this.htmlLeft;
   offsetY += this.stylePaddingTop + this.styleBorderTop + this.htmlTop;
 
   mx = e.pageX - offsetX;
