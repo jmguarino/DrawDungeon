@@ -3,36 +3,15 @@ var x1, y1, x2, y2;
 var canvas;
 var ctx;
 
-init();
-
-
-function CanvasState(canvas) {
-  
-  this.canvas = canvas;
-  this.width = canvas.width;
-  this.height = canvas.height;
+$(function() {
+  canvas = document.getElementById('dungeonmap');
 
   if(canvas.getContext) {
-    this.ctx = canvas.getContext('2d');
-    //placeholder ####
     ctx = canvas.getContext('2d');
   } else {
-    return;
+    // Stuff for non-canvas browsers here
   }
-}
-
-function Shape(x, y, w, h, fill) {
-	this.x = x || 0;
-	this.y = y || 0;
-	this.w = w || 1;
-	this.h = h || 1;
-	this.fill = fille || '#AAAAAA';
-}
-
-Shape.prototype.draw = function(ctx) {
-	ctx.fillStyle = this.fill;
-	ctx.fillRect(this.x, this.y, this.w, this.h);
-}
+});
 
 $("#dungeonmap").on('mousedown', function(e){
     if(isDown === false) {
@@ -60,7 +39,3 @@ $(window).on('mouseup', function(e){
 $("#clearbtn").click(function() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 });
-
-function init() {
-	var state = new CanvasState(document.getElementById('dungeonmap'));
-}
