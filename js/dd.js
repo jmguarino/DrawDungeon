@@ -1,4 +1,5 @@
 //TODO:
+// 1) Figure out bounding box/normals (orientation)
 var isDown = false;
 var x1, y1; //mousedown position
 var x2, y2; //mouseup position
@@ -10,6 +11,7 @@ function Shape(x, y, w, h, fill, temp) {
 	this.w = w || 1;
 	this.h = h || 1;
 	this.fill = fill || '#AAAAAA';
+	//this.fill = getRandomColor();
 	this.temp = temp || false;
 }
 
@@ -174,7 +176,6 @@ function CanvasState(canvas) {
 				var starty = (mouse.y - myState.y1 < 0) ? mouse.y : myState.y1;
 				myState.drawingShape = null;
 				myState.valid = false;
-				console.log(startx, starty, w, h);
 		    myState.addShape(new Shape(startx, starty, w, h, 'rgba(0,255,0,.6)', false));
 				break;
 
@@ -212,6 +213,7 @@ function CanvasState(canvas) {
 }
 
 CanvasState.prototype.addShape = function(shape) {
+
   this.shapes.push(shape);
   this.valid = false;
 }
@@ -280,30 +282,14 @@ CanvasState.prototype.getMouse = function(e) {
   return {x: mx, y: my};
 }
 
-/*
-$("#dungeonmap").on('mousedown', function(e){
-    if(isDown === false) {
-      isDown = true;
-
-      x1 = e.offsetX;
-      y1 = e.offsetY;
-    }
-});
-
-$(window).on('mouseup', function(e){
-  if(isDown === true) {
-
-    x2 = e.offsetX - x1;
-    y2 = e.offsetY - y1;
-
-	  console.log("x1: " + x1 + " y1: " + y1 + " x2: " + x2 + " y2: " + y2);
-
-    ctx.fillStyle = 'rgb(200, 0, 0)';
-    ctx.fillRect(x1, y1, x2, y2);
-    isDown = false;
-  }
-});
-*/
+function getRandomColor() {
+        var letters = '0123456789ABCDEF';
+        var color = '#';
+        for (var i = 0; i < 6; i++ ) {
+            color += letters[Math.floor(Math.random() * 16)];
+        }
+        return color;
+}
 
 function init() {
 	var state = new CanvasState(document.getElementById('dungeonmap'));
