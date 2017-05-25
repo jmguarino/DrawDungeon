@@ -1,22 +1,28 @@
 //TODO:
-// 1) add logic to mouse handlers to create new shape after clicking, dragging, releasing
-// 2) add strokeRect preview for click + drag, then fillRect when mouseup
 var isDown = false;
 var x1, y1; //mousedown position
 var x2, y2; //mouseup position
 var ctx;
 
-function Shape(x, y, w, h, fill) {
+function Shape(x, y, w, h, fill, temp) {
 	this.x = x || 0;
 	this.y = y || 0;
 	this.w = w || 1;
 	this.h = h || 1;
 	this.fill = fill || '#AAAAAA';
+	this.temp = temp || false;
 }
 
 Shape.prototype.draw = function(ctx) {
-	ctx.fillStyle = this.fill;
-	ctx.fillRect(this.x, this.y, this.w, this.h);
+	//Is a temporary shape (preview while holding mouse)
+	if(this.temp){
+		ctx.setLineDash([5, 15]);
+		ctx.strokeRect(this.x, this.y, this.w, this.h);
+	} else {
+		ctx.setLineDash([]);		//Back to bold line
+		ctx.fillStyle = this.fill;
+		ctx.fillRect(this.x, this.y, this.w, this.h);
+	}
 }
 
 Shape.prototype.contains = function(mx, my) {
@@ -61,10 +67,11 @@ function CanvasState(canvas) {
   this.dragging = false;
 	this.drawing = false;
   this.selection = null;
+	this.drawingShape = null;
   this.dragoffx = 0; //offsets used to draw moving shapes more naturally
   this.dragoffy = 0;
-	this.x1;
-	this.y1;
+	this.x1 = null;
+	this.y1 = null;
 
   //disable canvas text highlighting
   canvas.addEventListener('selectstart', function(e) {
@@ -82,17 +89,20 @@ function CanvasState(canvas) {
 		var mx = mouse.x;
 		var my = mouse.y;
 
+		myState.dragging = true;
+		myState.valid = false;
+
+		//clear last set selection
+		if (myState.selection) {
+			myState.selection = null;
+		}
+
 		//which mouse button was pressed
 		switch (e.which) {
 			case 1: //left click
-				//TODO drag and draw code
+				//Set start point of new shape
 				myState.x1 = mouse.x;
 				myState.y1 = mouse.y;
-				if(myState.dragging == false) {
-		      myState.dragging = true;
-					myState.valid = false;
-		    }
-
 				break;
 
 
@@ -107,20 +117,12 @@ function CanvasState(canvas) {
 				for(var i = l-1; i >= 0; i--) {
 					if(shapes[i].contains(mx, my)) {
 						var sel = shapes[i];
+						myState.selection = sel;
 						myState.dragoffx = mx - sel.x;
 						myState.dragoffy = my - sel.y;
-						myState.dragging = true;
-						myState.selection = sel;
-						myState.valid = false;
 						return;
 					}
 				}
-
-				if (myState.selection) {
-					myState.selection = null;
-					myState.valid = false;
-				}
-
 				break;
 				//end 3
 		}
@@ -132,9 +134,10 @@ function CanvasState(canvas) {
 			//which mouse button was pressed
 			switch (e.which) {
 				case 1: //left click
-					var h = mouse.x - myState.x1;
-					var w = mouse.y -myState.y1;
-					myState.ctx.strokeRect(myState.x1, myState.y1, w, h, 'rgba(0,255,0,.6)');
+					var w = mouse.x - myState.x1;
+					var h = mouse.y - myState.y1;
+				  myState.drawingShape = new Shape(myState.x1, myState.y1, w, h, 'rgba(0,255,0,.6)', true);
+					myState.valid = false;
 					break;
 
 
@@ -143,18 +146,49 @@ function CanvasState(canvas) {
 
 
 				case 3: //right click
-					//drag from selected point on shape
-					myState.selection.x = mouse.x - myState.dragoffx;
-					myState.selection.y = mouse.y - myState.dragoffy;
-					myState.valid = false;
-					break;
+					if(myState.selection){
+						//drag from selected point on shape
+						myState.selection.x = mouse.x - myState.dragoffx;
+						myState.selection.y = mouse.y - myState.dragoffy;
+						myState.valid = false;
+						break;
+					}
 					//end 3
 				}
     }
   }, true);
 
   canvas.addEventListener('mouseup', function(e) {
-    myState.dragging = false;
+		myState.dragging = false;
+		myState.drawingShape = null;
+		//which mouse button is being released
+		switch (e.which) {
+			case 1: //left click
+				//should finalize drawn shape on release of left mouse
+				var mouse = myState.getMouse(e);
+				//Without the absolute value + offset you can get funky negative height
+				//and width boxes that look fine but can't be selected to move
+				var w = Math.abs(mouse.x - myState.x1);
+				var h = Math.abs(mouse.y - myState.y1);
+				var startx = (mouse.x - myState.x1 < 0) ? mouse.x : myState.x1;
+				var starty = (mouse.y - myState.y1 < 0) ? mouse.y : myState.y1;
+				myState.drawingShape = null;
+				myState.valid = false;
+				console.log(startx, starty, w, h);
+		    myState.addShape(new Shape(startx, starty, w, h, 'rgba(0,255,0,.6)', false));
+				break;
+
+
+			case 2: //middle mouse
+				break;
+
+
+			case 3: //right click
+				break;
+
+
+			}
+
   }, true);
 
   canvas.addEventListener('dblclick', function(e) {
@@ -164,6 +198,15 @@ function CanvasState(canvas) {
 
 
   $("#clearbtn").click(function() {
+		myState.shapes = [];
+	  myState.dragging = false;
+		myState.drawing = false;
+	  myState.selection = null;
+		myState.drawingShape = null;
+	  myState.dragoffx = 0;
+	  myState.dragoffy = 0;
+		myState.x1 = null;
+		myState.y1 = null;
     myState.ctx.clearRect(0, 0, canvas.width, canvas.height);
   });
 }
@@ -196,13 +239,19 @@ CanvasState.prototype.draw = function() {
       shapes[i].draw(ctx);
     }
 
-    // Draw selection
-    if (this.selection != null) {
+    // Draw border around selection
+    if (this.selection) {
       ctx.strokeStyle = this.selectionColor;
       ctx.lineWidth = this.selectionWidth;
       var mySel = this.selection;
       ctx.strokeRect(mySel.x, mySel.y, mySel.w, mySel.h);
     }
+
+		// Draw dotted line preview of shape being drawn
+		if(this.drawingShape) {
+			this.drawingShape.draw(ctx);
+		}
+
 
     this.valid = true;
   }
