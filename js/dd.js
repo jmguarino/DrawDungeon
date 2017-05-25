@@ -70,28 +70,49 @@ function CanvasState(canvas) {
     return false;
   }, false);
 
-  canvas.addEventListener('mousedown', function(e) {
-      var mouse = myState.getMouse(e);
-      var mx = mouse.x;
-      var my = mouse.y;
-      var shapes = myState.shapes;
-      var l = shapes.length;
-      for(var i = l-1; i >= 0; i--) {
-        if(shapes[i].contains(mx, my)) {
-          var sel = shapes[i];
-          myState.dragoffx = mx - sel.x;
-          myState.dragoffy = my - sel.y;
-          myState.dragging = true;
-          myState.selection = sel;
-          myState.valid = false;
-          return;
-        }
-      }
+	//disable context menu (right click menu) on canvas
+	$("#dungeonmap").contextmenu(function(e) {
+		e.preventDefault();
+	});
 
-      if (myState.selection) {
-        myState.selection = null;
-        myState.valid = false;
-      }
+  canvas.addEventListener('mousedown', function(e) {
+		//which mouse button was pressed
+		switch (event.which) {
+			case 1: //left click
+				//TODO drag and draw code
+				break;
+
+
+			case 2: //middle mouse
+
+
+			case 3: //right click
+				//select shape, move while held
+				var mouse = myState.getMouse(e);
+				var mx = mouse.x;
+				var my = mouse.y;
+				var shapes = myState.shapes;
+				var l = shapes.length;
+				for(var i = l-1; i >= 0; i--) {
+					if(shapes[i].contains(mx, my)) {
+						var sel = shapes[i];
+						myState.dragoffx = mx - sel.x;
+						myState.dragoffy = my - sel.y;
+						myState.dragging = true;
+						myState.selection = sel;
+						myState.valid = false;
+						return;
+					}
+				}
+
+				if (myState.selection) {
+					myState.selection = null;
+					myState.valid = false;
+				}
+
+
+
+		}
   }, true);
 
   canvas.addEventListener('mousemove', function(e) {
@@ -113,6 +134,7 @@ function CanvasState(canvas) {
     var mouse = myState.getMouse(e);
     myState.addShape(new Shape(mouse.x - 10, mouse.y - 10, 20, 20, 'rgba(0,255,0,.6)'));
   }, true);
+
 
   $("#clearbtn").click(function() {
     myState.ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -142,7 +164,7 @@ CanvasState.prototype.draw = function() {
     for (var i = 0; i < l; i++) {
       var shape = shapes[i];
       if(shape == null) continue;
-      if(shape.x > this.width || shape.y > this.height || 
+      if(shape.x > this.width || shape.y > this.height ||
 	   shape.x + shape.w < 0 || shape.y + shape.h < 0) continue;
       shapes[i].draw(ctx);
     }
