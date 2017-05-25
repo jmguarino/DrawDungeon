@@ -1,7 +1,6 @@
 //TODO:
 // 1) add logic to mouse handlers to create new shape after clicking, dragging, releasing
-// 2) add logic to mouse handlers to handle right click select + move shape (hold)
-// 3) add strokeRect preview for click + drag, then fillRect when mouseup
+// 2) add strokeRect preview for click + drag, then fillRect when mouseup
 var isDown = false;
 var x1, y1; //mousedown position
 var x2, y2; //mouseup position
@@ -60,9 +59,12 @@ function CanvasState(canvas) {
   this.valid = false; //if false will redraw
   this.shapes = [];
   this.dragging = false;
+	this.drawing = false;
   this.selection = null;
   this.dragoffx = 0; //offsets used to draw moving shapes more naturally
   this.dragoffy = 0;
+	this.x1;
+	this.y1;
 
   //disable canvas text highlighting
   canvas.addEventListener('selectstart', function(e) {
@@ -76,21 +78,30 @@ function CanvasState(canvas) {
 	});
 
   canvas.addEventListener('mousedown', function(e) {
+		var mouse = myState.getMouse(e);
+		var mx = mouse.x;
+		var my = mouse.y;
+
 		//which mouse button was pressed
-		switch (event.which) {
+		switch (e.which) {
 			case 1: //left click
 				//TODO drag and draw code
+				myState.x1 = mouse.x;
+				myState.y1 = mouse.y;
+				if(myState.dragging == false) {
+		      myState.dragging = true;
+					myState.valid = false;
+		    }
+
 				break;
 
 
 			case 2: //middle mouse
+				break;
 
 
 			case 3: //right click
 				//select shape, move while held
-				var mouse = myState.getMouse(e);
-				var mx = mouse.x;
-				var my = mouse.y;
 				var shapes = myState.shapes;
 				var l = shapes.length;
 				for(var i = l-1; i >= 0; i--) {
@@ -110,19 +121,35 @@ function CanvasState(canvas) {
 					myState.valid = false;
 				}
 
-
-
+				break;
+				//end 3
 		}
   }, true);
 
   canvas.addEventListener('mousemove', function(e) {
     if (myState.dragging){
-      var mouse = myState.getMouse(e);
+			var mouse = myState.getMouse(e);
+			//which mouse button was pressed
+			switch (e.which) {
+				case 1: //left click
+					var h = mouse.x - myState.x1;
+					var w = mouse.y -myState.y1;
+					myState.ctx.strokeRect(myState.x1, myState.y1, w, h, 'rgba(0,255,0,.6)');
+					break;
 
-      //drag from selected point on shape
-      myState.selection.x = mouse.x - myState.dragoffx;
-      myState.selection.y = mouse.y - myState.dragoffy;
-      myState.valid = false;
+
+				case 2: //middle mouse
+					break;
+
+
+				case 3: //right click
+					//drag from selected point on shape
+					myState.selection.x = mouse.x - myState.dragoffx;
+					myState.selection.y = mouse.y - myState.dragoffy;
+					myState.valid = false;
+					break;
+					//end 3
+				}
     }
   }, true);
 
